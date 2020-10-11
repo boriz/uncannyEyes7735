@@ -22,9 +22,9 @@
 #include <ST7735_t3.h>
 
 // Enable ONE of these #includes -- HUGE graphics tables for various eyes:
-//#include "graphics/defaultEye.h"    // Standard human-ish hazel eye -OR-
+#include "graphics/defaultEye.h"    // Standard human-ish hazel eye -OR-
 //#include "graphics/dragonEye.h"     // Slit pupil fiery dragon/demon eye -OR-
-#include "graphics/noScleraEye.h"   // Large iris, no sclera -OR-
+//#include "graphics/noScleraEye.h"   // Large iris, no sclera -OR-
 //#include "graphics/goatEye.h"       // Horizontal pupil goat/Krampus eye -OR-
 //#include "graphics/newtEye.h"       // Eye of newt -OR-
 //#include "graphics/terminatorEye.h" // Git to da choppah!
@@ -49,15 +49,16 @@
 
 typedef struct 
 {        
-  int8_t  select;       // pin numbers for each eye's screen select line
-  int8_t  backlight;       // pin numbers for each eye's backlight pin  
-  uint8_t rotation;     // also display rotation.
+  int8_t  power;       // pin numbers for each eye's power pin
+  int8_t  select;      // pin numbers for each eye's screen select line
+  int8_t  backlight;   // pin numbers for each eye's backlight pin  
+  uint8_t rotation;    // also display rotation.
 } eyeInfo_t;
 
 eyeInfo_t eyeInfo[] = 
 {
-  { 10, 6, 1 }, // LEFT EYE display-select, backlight, no rotation
-  {  7, 6, 1 }, // RIGHT EYE display-select, backlight, no rotation
+  { 19, 10, 6,  1 },  // LEFT EYE: power, display-select, backlight, no rotation
+  { 20, 7,  8, 1 },  // RIGHT EYE: powe, display-select, backlight, no rotation
 };
 #define NUM_EYES 2
 
@@ -65,6 +66,7 @@ eyeInfo_t eyeInfo[] =
 
 #define DISPLAY_DC        9    // Data/command pin for ALL displays
 #define DISPLAY_RESET     5    // Reset pin for ALL displays
+
 #define SPI_FREQ 48000000
 #define TRACKING            // If defined, eyelid tracks pupil
 
@@ -110,16 +112,22 @@ void setup(void)
     Serial.print("Create display #"); Serial.println(e);
     eye[e].display = new displayType(eyeInfo[e].select, DISPLAY_DC, 11, 13, -1);
     eye[e].blink.state = NOBLINK;
+
+    // Configure power pin
+    pinMode(eyeInfo[e].power, OUTPUT);
+    digitalWrite(eyeInfo[e].power, HIGH);
+    
     // Configure CS pin
     pinMode(eyeInfo[e].select, OUTPUT);
     digitalWrite(eyeInfo[e].select, HIGH); // Deselect them all
 
     // Configure backlight pin
     pinMode(eyeInfo[e].backlight, OUTPUT);
-    digitalWrite(eyeInfo[e].backlight, HIGH);
+    digitalWrite(eyeInfo[e].backlight, HIGH);    
   }
 
   Serial.println("Reset displays");
+  delay(200);
   pinMode(DISPLAY_RESET, OUTPUT);
   digitalWrite(DISPLAY_RESET, LOW);  
   delay(1);
